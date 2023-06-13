@@ -13,6 +13,8 @@ from flask import (
 from PIL import Image
 import easyocr
 
+from utils import remove_special_characters, gray_scale, sharpen
+
 
 app = Flask(__name__, static_folder="static")
 app.config['DEBUG'] = True
@@ -45,12 +47,17 @@ def submit_image():
     img = base64.b64decode(img)
     img = BytesIO(img)
     img = Image.open(img)
-    img.save('upload/_image.png')
+    org_img = 'upload/_image.png'
+    img.save(org_img)
+    gray_img = gray_scale(org_img)
+    sharpen_img = sharpen(gray_img)
 
     reader = easyocr.Reader(['ko', 'en'])
-    ocr_results = reader.readtext('upload/_image.png')
+    ocr_results = reader.readtext(sharpen_img)
 
-    print("="*50)
-    print(f"({type(ocr_results)}){ocr_results}")
+    print("=" * 50)
+    for r in ocr_results:
+        print(f"{r}, {remove_special_characters(r[1])}")
+    preprocessed_data = [remove_special_characters(i[1]) for i in ocr_results]
 
-    return json.dumps([i[1] for i in ocr_results]), 200, {'ContentType': 'application/json'}
+    return json.dumps(preprocessed_data, ensure_ascii=False).encode('utf8'), 200, {'ContentType': 'application/json; charset=utf-8'}
