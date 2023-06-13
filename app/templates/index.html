@@ -85,6 +85,7 @@
     document.querySelector('.tui-image-editor-header-buttons .tui-image-editor-save-btn').addEventListener('click', function() {
       const imageUrl = imageEditor.toDataURL();
 
+      $("#ocrResult").val("처리중...");
       // SEND TO SERVER
       $.ajax({
         url: 'http://127.0.0.1:5000/submit_image', // upload url

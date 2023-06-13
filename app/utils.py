@@ -19,6 +19,15 @@ def sharpen(image, factor: int = 2) -> str:
     img = "upload/_image_s.png"
     img_o = Image.open(image)
     enhancer = ImageEnhance.Sharpness(img_o)
-    img_s = enhancer.enhance(factor)
-    img_s.save(img)
+    img_e = enhancer.enhance(factor)
+    img_e.save(img)
+    return img
+
+
+def contrast(image, factor: float = 1.5) -> str:
+    img = "upload/_image_c.png"
+    img_o = Image.open(image)
+    enhancer = ImageEnhance.Contrast(img_o)
+    img_e = enhancer.enhance(factor)
+    img_e.save(img)
     return img

@@ -13,7 +13,12 @@ from flask import (
 from PIL import Image
 import easyocr
 
-from utils import remove_special_characters, gray_scale, sharpen
+from utils import (
+    remove_special_characters,
+    gray_scale,
+    sharpen,
+    contrast
+)
 
 
 app = Flask(__name__, static_folder="static")
@@ -51,9 +56,10 @@ def submit_image():
     img.save(org_img)
     gray_img = gray_scale(org_img)
     sharpen_img = sharpen(gray_img)
+    contrast_img = contrast(sharpen_img, factor=1.1)
 
     reader = easyocr.Reader(['ko', 'en'])
-    ocr_results = reader.readtext(sharpen_img)
+    ocr_results = reader.readtext(contrast_img)
 
     print("=" * 50)
     for r in ocr_results:
