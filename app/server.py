@@ -17,7 +17,8 @@ from utils import (
     remove_special_characters,
     gray_scale,
     sharpen,
-    contrast
+    contrast,
+    adjust_image
 )
 
 
@@ -54,12 +55,13 @@ def submit_image():
     img = Image.open(img)
     org_img = 'upload/_image.png'
     img.save(org_img)
-    gray_img = gray_scale(org_img)
-    sharpen_img = sharpen(gray_img)
-    contrast_img = contrast(sharpen_img, factor=1.1)
+    # gray_img = gray_scale(org_img)
+    # sharpen_img = sharpen(gray_img)
+    # proc_img = contrast(sharpen_img, factor=1.1)
+    proc_img = adjust_image(org_img)
 
     reader = easyocr.Reader(['ko', 'en'])
-    ocr_results = reader.readtext(contrast_img)
+    ocr_results = reader.readtext(proc_img)
 
     print("=" * 50)
     for r in ocr_results:
