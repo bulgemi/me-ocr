@@ -1,5 +1,10 @@
 import re
+from difflib import SequenceMatcher
 from PIL import Image, ImageOps, ImageEnhance
+
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 
 def remove_special_characters(data: str) -> str:
