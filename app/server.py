@@ -69,30 +69,20 @@ def submit_image():
     reader = easyocr.Reader(['ko', 'en'])
     ocr_results = reader.readtext(proc_img)
 
-    preprocessed_data = [typo_cor.correction(remove_special_characters(i[1])) for i in ocr_results]
     preprocessed_data_map = OrderedDict()
     for i in ocr_results:
         preprocessed_data_map[typo_cor.correction(remove_special_characters(i[1]))] = i[0]
     # print("=" * 50)
     # for k, v in preprocessed_data_map.items():
     #     print(f"{k}: {v}")
-    print(f"{preprocessed_data_map.items()}")
-    print(f"{preprocessed_data_map.keys()}")
     preprocessed_data_list = list(preprocessed_data_map.keys())
-    print(f"{len(preprocessed_data_list)}")
-    print(f"{preprocessed_data_list.index('상호')}")
 
-    print("=" * 50)
-    extract_keys = {
-        '진료기간': {"min": [20, 20], "max": [30, 30]},
-        '진료비총액': {"min": [180, 15], "max": [250, 30]}
-    }
     result = list()
     result.append(f"사업자등록번호: {preprocessed_data_list[preprocessed_data_list.index('사업자등록번호')+1]}")
     result.append(f"상호: {preprocessed_data_list[preprocessed_data_list.index('상호')+1]}")
     result.append(f"전화번호: {preprocessed_data_list[preprocessed_data_list.index('전화번호')+1]}")
     temp = preprocessed_data_list[preprocessed_data_list.index('진료비총액')+1:]
-    print(temp)
+
     for t in temp:
         t = t.replace('O', '0')
         t = t.replace('o', '0')
