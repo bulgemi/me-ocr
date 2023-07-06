@@ -84,6 +84,7 @@ def submit_image():
     phone = '전화번호'
     total_expenses = '진료비총액'
     patient_expenses = '환자부담총액'
+    patient_expenses_a = '환자부담액'
     total_drug_expenses = '약제비총액'
     my_expenses = '본인부담금'
     insurer_expenses = '보험자부담금'
@@ -137,6 +138,17 @@ def submit_image():
 
     if patient_expenses in preprocessed_data_list:
         temp = preprocessed_data_list[preprocessed_data_list.index(patient_expenses)+1:]
+
+        for t in temp:
+            t = t.replace('O', '0')
+            t = t.replace('o', '0')
+            t = t.replace('ㅇ', '0')
+            if t.isnumeric() and not t.startswith('0') and int(t) > 0:
+                result.append(f"{patient_expenses}: {t}")
+                break
+
+    if patient_expenses_a in preprocessed_data_list:
+        temp = preprocessed_data_list[preprocessed_data_list.index(patient_expenses_a)+1:]
 
         for t in temp:
             t = t.replace('O', '0')
