@@ -2,6 +2,8 @@
 from symspellpy import SymSpell, Verbosity
 import hgtk
 
+from utils import remove_circle_characters
+
 
 def to_jamos(text):
     return hgtk.text.decompose(text)
@@ -13,6 +15,7 @@ class TypoCorrection:
         self.sym_spell.load_dictionary("upload/ko_50k_decomposed.txt", 0, 1)
 
     def correction(self, text) -> str:
+        text = remove_circle_characters(text) if remove_circle_characters(text) is not None else text
         best = {"spell": None, "count": 0}
         for suggestion in self.sym_spell.lookup(to_jamos(text), Verbosity.ALL):
             if suggestion.count > best['count']:

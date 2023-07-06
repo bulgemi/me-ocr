@@ -71,6 +71,7 @@ def submit_image():
 
     preprocessed_data_map = OrderedDict()
     for i in ocr_results:
+        print(f"{remove_special_characters(i[1])} -> {typo_cor.correction(remove_special_characters(i[1]))}")
         preprocessed_data_map[typo_cor.correction(remove_special_characters(i[1]))] = i[0]
     # print("=" * 50)
     # for k, v in preprocessed_data_map.items():
@@ -78,16 +79,71 @@ def submit_image():
     preprocessed_data_list = list(preprocessed_data_map.keys())
 
     result = list()
-    result.append(f"사업자등록번호: {preprocessed_data_list[preprocessed_data_list.index('사업자등록번호')+1]}")
-    result.append(f"상호: {preprocessed_data_list[preprocessed_data_list.index('상호')+1]}")
-    result.append(f"전화번호: {preprocessed_data_list[preprocessed_data_list.index('전화번호')+1]}")
-    temp = preprocessed_data_list[preprocessed_data_list.index('진료비총액')+1:]
+    registration_number = '사업자등록번호'
+    company_name = '상호'
+    phone = '전화번호'
+    total_expenses = '진료비총액'
+    patient_expenses = '환자부담총액'
+    total_drug_expenses = '약제비총액'
+    my_expenses = '본인부담금'
+    insurer_expenses = '보험자부담금'
 
-    for t in temp:
-        t = t.replace('O', '0')
-        t = t.replace('o', '0')
-        if t.isnumeric() and not t.startswith('0') and int(t) > 0:
-            result.append(f"진료비총액: {t}")
-            break
+    if registration_number in preprocessed_data_list:
+        money = preprocessed_data_list[preprocessed_data_list.index(registration_number)+1]
+        if money.isnumeric():
+            result.append(
+                f"{registration_number}: {money}"
+            )
+
+    if company_name in preprocessed_data_list:
+        val = preprocessed_data_list[preprocessed_data_list.index(company_name)+1]
+        result.append(f"{company_name}: {val}")
+
+    if phone in preprocessed_data_list:
+        val = preprocessed_data_list[preprocessed_data_list.index(phone)+1]
+        result.append(f"{phone}: {val}")
+
+    if total_drug_expenses in preprocessed_data_list:
+        money = preprocessed_data_list[preprocessed_data_list.index(total_drug_expenses)+1]
+        if money.isnumeric():
+            result.append(
+                f"{total_drug_expenses}: {money}"
+            )
+
+    if my_expenses in preprocessed_data_list:
+        money = preprocessed_data_list[preprocessed_data_list.index(my_expenses)+1]
+        if money.isnumeric():
+            result.append(
+                f"{my_expenses}: {money}"
+            )
+
+    if insurer_expenses in preprocessed_data_list:
+        money = preprocessed_data_list[preprocessed_data_list.index(insurer_expenses)+1]
+        if money.isnumeric():
+            result.append(
+                f"{insurer_expenses}: {money}"
+            )
+
+    if total_expenses in preprocessed_data_list:
+        temp = preprocessed_data_list[preprocessed_data_list.index(total_expenses)+1:]
+
+        for t in temp:
+            t = t.replace('O', '0')
+            t = t.replace('o', '0')
+            t = t.replace('ㅇ', '0')
+            if t.isnumeric() and not t.startswith('0') and int(t) > 0:
+                result.append(f"{total_expenses}: {t}")
+                break
+
+    if patient_expenses in preprocessed_data_list:
+        temp = preprocessed_data_list[preprocessed_data_list.index(patient_expenses)+1:]
+
+        for t in temp:
+            t = t.replace('O', '0')
+            t = t.replace('o', '0')
+            t = t.replace('ㅇ', '0')
+            if t.isnumeric() and not t.startswith('0') and int(t) > 0:
+                result.append(f"{patient_expenses}: {t}")
+                break
 
     return json.dumps(result, ensure_ascii=False).encode('utf8'), 200, {'ContentType': 'application/json; charset=utf-8'}

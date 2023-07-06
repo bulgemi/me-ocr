@@ -1,10 +1,23 @@
 import re
+from typing import Optional
 from difflib import SequenceMatcher
 from PIL import Image, ImageOps, ImageEnhance
 
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
+
+
+def remove_circle_characters(data: str) -> Optional[str]:
+    t = data.replace('O', '')
+    t = t.replace('o', '')
+    t = t.replace('ㅇ', '')
+    t = t.replace('@', '')
+
+    if t.isnumeric():
+        return None
+    else:
+        return t
 
 
 def remove_special_characters(data: str) -> str:
