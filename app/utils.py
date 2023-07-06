@@ -13,6 +13,7 @@ def remove_circle_characters(data: str) -> Optional[str]:
     t = t.replace('o', '')
     t = t.replace('ㅇ', '')
     t = t.replace('@', '')
+    t = t.replace('0', '')  # 추가
 
     if t.isnumeric():
         return None
