@@ -56,7 +56,7 @@ def submit_image():
 
     web_results = list()  # 웹 출력 목록 변수
     start_time = datetime.datetime.now()
-    web_results.append(f'[[ start : {start_time.strftime("%Y-%m-%d %H:%M:%S %fms")} ]]')
+    web_results.append(f'[start: {start_time.strftime("%Y-%m-%d %H:%M:%S %fms")}]')
     # typo_cor = TypoCorrection()
     index_key = 'base64,'
     # print(request)
@@ -85,7 +85,7 @@ def submit_image():
 
     # print(ocr_results)
     middle_time = datetime.datetime.now()
-    web_results.append(f'[[ middle_time : {middle_time.strftime("%Y-%m-%d %H:%M:%S %fms")}, elapse_time : {(middle_time-start_time).total_seconds()} seconds ]]')
+    web_results.append(f'[middle_time: {middle_time.strftime("%Y-%m-%d %H:%M:%S %fms")}, elapse_time: {(middle_time-start_time).total_seconds()} seconds]\n')
 
     expense_type = None
     max_outer_contour = RoiInfo()
@@ -122,15 +122,13 @@ def submit_image():
         print('Unknown Expense Type !!!')
         web_results.append({"Unknown": "Expense Type"})
 
-    web_results.append(":")
-    web_results.append("-- refined data -- : ---------------")
-    web_results.append(":")
+    web_results.append("\n----- refined data -----\n")
 
     for data in refine_data:
         # print(data)
-        web_results.append(f'{data.key_str} : [{data.value}, 정확도 ({data.accurate})]')
+        web_results.append(f'{data.key_str}: [{data.value}, 정확도 ({data.accurate})]')
 
     end_time = datetime.datetime.now()
-    web_results.append(f'[[ end_time : {end_time.strftime("%Y-%m-%d %H:%M:%S %fms")}, elapse_time : {(end_time-start_time).total_seconds()} seconds ]]')
+    web_results.append(f'\n[end_time: {end_time.strftime("%Y-%m-%d %H:%M:%S %fms")}, elapse_time: {(end_time-start_time).total_seconds()} seconds]')
 
     return json.dumps(web_results, indent=2, ensure_ascii=False).encode('utf8'), 200, {'ContentType': 'application/json; charset=utf-8'}
