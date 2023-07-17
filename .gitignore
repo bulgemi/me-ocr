@@ -1,3 +1,4 @@
 # Ignore directory
 
 venv/
+app/upload/*.png
