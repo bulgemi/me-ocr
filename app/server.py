@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 import datetime
+import cv2
 
 import numpy as np
 from flask import (
@@ -117,9 +118,9 @@ def check_expense_type(datainfo):
     return None
 
 # 약제비계산서 keywords
-ptype_key_strs = ('환자성명', '환자정보', '조제일자', '본인부담금', '분인부담금', '보험자부담금', '비급여','사업가등록번호','자업지등록번호','사업자등록번호','사업장등록번호','상호','호')
+ptype_key_strs = ('환자성명', '환자정보', '조제일자', '본인부담금', '분인부담금', '보험자부담금', '비급여','사업가등록번호','사업지등록번호','자업지등록번호','사업자등록번호','사업장등록번호','상호','호')
 # 진료비영수증 keywords
-mtype_key_strs = ('환자성명', '진료기간','본인부담금', '합계', '함계', '사업가등록번호','사업자등록번호','사업장등록번호', '상호') # 합계는 width/2 보다 작은 값으로 선택
+mtype_key_strs = ('환자성명', '진료기간','본인부담금', '합계', '함계', '사업가등록번호','사업자등록번호','사업지등록번호','사업장등록번호', '상호') # 합계는 width/2 보다 작은 값으로 선택
 @dataclass
 class OCRDataInfo:   # Data structure for expenses
   key_str : str = None
@@ -175,7 +176,7 @@ def ext_next_column_data(key, baseinfo, datainfos):
     if baseinfo == None :
         return None;
     for item in datainfos :
-        if key in ['사업자등록번호','사업가등록번호','사업장등록번호'] :
+        if key in ['사업자등록번호','사업가등록번호','사업장등록번호','사업지등록번호',] :
             if (((baseinfo.rect.right                       )          <= item.rect.left  ) and
                 ((baseinfo.rect.right  + int(baseinfo.rect.width*2))   >= item.rect.right ) and
                 ((baseinfo.rect.top    - int(baseinfo.rect.height/2))  <= item.rect.top   ) and
@@ -247,7 +248,7 @@ def extract_medical_data(keys, datainfos, max_contour):
                     tmp3.value   = item.value
                     tmp3.accurate = item.accurate
                     extracts.append(tmp3)
-        elif key in ['사업자등록번호', '사업가등록번호', '사업장등록번호', '상호']:
+        elif key in ['사업자등록번호', '사업가등록번호', '사업장등록번호', '사업지등록번호', '상호']:
             tmp2 = ext_next_column_data(key, tmp, datainfos)
             if tmp2 != None : # keyword 연관 데이타 발견되었으면 저장
                 tmp3 = OCRDataInfo()
@@ -321,7 +322,7 @@ def refine_extract_data(expense_type, extracts_data):
         if expense_type == ExpenseType.MEDICAL :  # 진료비 영수증 Type 처리
             if data.key_str == '함계' :
                 data.key_str = '합계'
-            elif data.key_str in ['사업가등록번호', '사업장등록번호'] :
+            elif data.key_str in ['사업가등록번호', '사업지등록번호', '사업장등록번호'] :
                 data.key_str = '사업자등록번호'
             elif data.key_str == '진료기간' : 
                 if (idx + 1) < len(extracts_data) and extracts_data[idx+1].key_str == '진료기간' : # 진료기간이 from - to 인 경우를 체크
@@ -330,7 +331,7 @@ def refine_extract_data(expense_type, extracts_data):
         elif expense_type == ExpenseType.PHARMACEUTICAL :  # 약제비계산서 Type 처리
             if data.key_str == '분인부담금' :
                 data.key_str = '본인부담금'
-            elif data.key_str in ['사업가등록번호', '자업지등록번호', '사업장등록번호'] :
+            elif data.key_str in ['사업가등록번호', '사업지등록번호', '자업지등록번호', '사업장등록번호'] :
                 data.key_str = '사업자등록번호'
             elif data.key_str == '호' :
                 data.key_str = '상호'
@@ -366,15 +367,76 @@ def submit_image():
     img = BytesIO(img)
     img = Image.open(img)
     org_img = 'upload/_image.png'
+    gray_img = 'upload/_g1.png'
+    conv_img = 'upload/_image2.png'
     img.save(org_img)
     # gray_img = gray_scale(org_img)
     # sharpen_img = sharpen(gray_img)
     # proc_img = contrast(sharpen_img, factor=1.1)
-    proc_img = adjust_image(org_img)
+
 
     reader = easyocr.Reader(['ko', 'en'])
+
+# Autocrop pre-processing start 처리...
     if True :
-        ocr_results = reader.readtext(org_img, detail=2)  # simple image
+        if True : # simple pre-process
+            cvimg = cv2.imread(org_img)
+            grayimg = cv2.cvtColor(cvimg, cv2.COLOR_BGR2GRAY) # 흑백처리
+            cv2.imwrite(gray_img, grayimg)
+            # sharpening_mask = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+            # sharpenimg = cv2.filter2D(grayimg, -1, sharpening_mask)
+            # cv2.imwrite('upload/_s.png', sharpenimg)
+            # blurimg = cv2.medianBlur(sharpenimg, ksize=5) # 노이즈 제거
+            # cv2.imwrite('upload/_b.png', blurimg)
+            procimg = grayimg
+        ocr_results = reader.readtext(gray_img, detail=2)  # simple image
+    else :
+        proc_img = adjust_image(org_img)
+        procimg = cv2.imread(proc_img)
+        ocr_results = reader.readtext(proc_img)
+
+    middle_time = datetime.datetime.now()
+    web_results.append(f'[[ middle_time : {middle_time.strftime("%Y-%m-%d %H:%M:%S %fms")}, elapse_time : {(middle_time-start_time).total_seconds()} seconds ]]')
+
+    expense_type = None
+    max_outer_contour = ROI_Info()
+    type_top = 99990
+    type_height = 0
+    for item in ocr_results:  # EasyOCR 추출 데이타 원본에서 분석용 데이타 포맷으로 변환처리
+        conv_item = convert_item_dataclass(item)
+        result = check_expense_type(conv_item)  # type check
+        if result != None:
+            expense_type = ExpenseType(result) # set expense type
+            type_top = conv_item.rect.top if type_top > conv_item.rect.top else type_top
+            type_height = conv_item.rect.height if type_height < conv_item.rect.height else type_height
+            print(f' conv_item : {conv_item}')
+        set_max_outer_contour(max_outer_contour, conv_item) # set max countour
+    if expense_type == ExpenseType.MEDICAL :  # 진료비 영수증 Type 처리,  진료비 항목의 height로 crop height 보정 처리
+        refined_top = max(type_top-10, max_outer_contour.top)
+        refined_bottom = min(refined_top + type_height * 28, max_outer_contour.bottom)
+        # print(f'max_outer_contour : {max_outer_contour}, top : {refined_top}, bottom : {refined_bottom}')
+        cropimg = procimg[refined_top:refined_bottom, max_outer_contour.left:max_outer_contour.right]
+    elif expense_type == ExpenseType.PHARMACEUTICAL :  # 약제비계산서 Type 처리,  약제비 항목의 height로 crop height 보정 처리
+        refined_top = max(type_top-10, max_outer_contour.top)
+        refined_bottom = min(refined_top + type_height * 17, max_outer_contour.bottom)
+        # print(f'max_outer_contour : {max_outer_contour}, top : {refined_top}, bottom : {refined_bottom}')
+        cropimg = procimg[refined_top:refined_bottom, max_outer_contour.left:max_outer_contour.right]
+    else :
+        cropimg = procimg[max_outer_contour.top:max_outer_contour.bottom, max_outer_contour.left:max_outer_contour.right]
+    cv2.imwrite('upload/_c.png', cropimg)
+    cv2.imwrite(conv_img, cropimg)
+# Autocrop pre-processing end 처리...
+
+    if True :
+        # grayimg = cv2.cvtColor(cropimg, cv2.COLOR_BGR2GRAY) # 흑백처리
+        # cv2.imwrite('upload/_g2.png', grayimg)
+        # sharpening_mask = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+        # sharpenimg = cv2.filter2D(grayimg, -1, sharpening_mask)
+        # cv2.imwrite('upload/_s.png', sharpenimg)
+        # blurimg = cv2.medianBlur(sharpenimg, ksize=5) # 노이즈 제거
+        # cv2.imwrite('upload/_b.png', blurimg)
+        ocr_results = reader.readtext(conv_img, detail=2)  # simple image
+        # ocr_results = reader.readtext(conv_img)  # simple image
     else :
         ocr_results = reader.readtext(proc_img)
     # print(ocr_results)
@@ -387,7 +449,7 @@ def submit_image():
     for item in ocr_results:  # EasyOCR 추출 데이타 원본에서 분석용 데이타 포맷으로 변환처리
         conv_item = convert_item_dataclass(item)
         # print(item)
-        # print(conv_item)
+        print(conv_item)
         result = check_expense_type(conv_item)  # type check
         if result != None:
               expense_type = ExpenseType(result) # set expense type
