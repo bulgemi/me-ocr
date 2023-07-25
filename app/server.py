@@ -5,6 +5,7 @@ from io import BytesIO
 import base64
 from collections import OrderedDict
 import datetime
+import ssl
 
 import numpy as np
 from flask import (
@@ -30,6 +31,8 @@ from roi import (
     RoiUtils,
     ExpenseType
 )
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 app = Flask(__name__, static_folder="static")

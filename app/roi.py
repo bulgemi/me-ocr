@@ -2,6 +2,7 @@
 from typing import Optional
 from enum import Enum
 from dataclasses import dataclass, field
+import re
 
 
 @dataclass
@@ -262,6 +263,9 @@ class RoiUtils:
                         tmp3.key_str = key
                         tmp3.rect = item.rect
                         tmp3.value = item.value
+                        if key in ['진료기간']:
+                            tmp3.value = re.sub('[.]', '-', tmp3.value)
+                        tmp3.value = re.sub('[=+,#/\?:^.@*\"※ㆍ!』‘|\(\)\[\]`\'…》\”\“\’·]', '', tmp3.value)
                         tmp3.accurate = item.accurate
                         extracts.append(tmp3)
             elif key in ['사업자등록번호', '사업가등록번호', '사업장등록번호', '상호']:
@@ -272,7 +276,7 @@ class RoiUtils:
 
                     tmp3.key_str = key
                     tmp3.rect = tmp2.rect
-                    tmp3.value = tmp2.value
+                    tmp3.value = re.sub('[=+,#/\?:^.@*\"※~ㆍ!』‘|\(\)\[\]`\'…》\”\“\’·]', '', tmp2.value)
                     tmp3.accurate = tmp2.accurate
                     extracts.append(tmp3)
             elif key in ['합계', '함계']:
@@ -294,7 +298,8 @@ class RoiUtils:
                                     tmp4.rect.right + int(tmp4.rect.width/2) >= column_data.rect.right:
                                 tmp3.key_str = summary_key
                                 tmp3.rect = column_data.rect
-                                tmp3.value = column_data.value
+                                tmp3.value = re.sub('[=+#/\?:^@*\"※~ㆍ!』‘|\(\)\[\]`\'…》\”\“\’·원]', '', column_data.value)
+                                tmp3.value = re.sub('[.]', ',', tmp3.value)
                                 tmp3.accurate = column_data.accurate
                                 # print("tmp3 : {}".format(tmp3))
                                 extracts.append(tmp3)
@@ -303,7 +308,8 @@ class RoiUtils:
                         if flag_exist is False:
                             tmp3.key_str = '비급여-선택진료료이외'
                             tmp3.rect = column_data.rect
-                            tmp3.value = column_data.value
+                            tmp3.value = re.sub('[=+#/\?:^@*\"※~ㆍ!』‘|\(\)\[\]`\'…》\”\“\’·원]', '', column_data.value)
+                            tmp3.value = re.sub('[.]', ',', tmp3.value)
                             tmp3.accurate = column_data.accurate
                             extracts.append(tmp3)
                         else:
@@ -331,7 +337,9 @@ class RoiUtils:
 
                 tmp3.key_str = key
                 tmp3.rect = tmp2.rect
-                tmp3.value = tmp2.value
+                tmp3.value = re.sub('[=+#/\?:^.@*\"※~ㆍ!』‘|\[\]`\'…》\”\“\’·]', '', tmp2.value)
+                if key in ['본인부담금', '분인부담금', '비급여', '보험자부담금']:
+                    tmp3.value = re.sub('[원]', '', tmp3.value)
                 tmp3.accurate = tmp2.accurate
                 extracts.append(tmp3)
         return extracts
