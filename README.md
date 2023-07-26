@@ -1,8 +1,8 @@
 # 의료비 영수증 OCR
 
-## 스크린샷
+## 아키텍처
 
-![스크린샷](./docs/screen_shot_01.png)
+![아키텍처](./docs/archi.png)
 
 ## 특징
 
@@ -11,9 +11,19 @@
 * 오타 수정
 * 노이즈 문자 제거
 
-## 아키텍처
+## Lessons Learned
 
-![아키텍처](./docs/archi.png)
+* OCR 인식률 개선을 위한 이미지 전처리시 같이 사용하는 OCR 라이브러리 특성 고려 필요
+* OCR 추출 문자의 대상 범위가 존재할 경우 오타 수정을 통한 인식률 개선 가능성 확인
+* 다양한 오픈 소스 라이브러리 활용을 통한 빠른 개발(TOAST Image Editor, EasyOCR, Symspell 등)
+
+## 산출물
+
+* Web Application
+
+## 산출물 스크린샷
+
+![스크린샷](./docs/screen_shot_01.png)
 
 ## 참고 자료
 
